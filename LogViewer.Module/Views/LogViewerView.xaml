@@ -1,0 +1,109 @@
+﻿<UserControl x:Class="LogViewer.Module.Views.LogViewerView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"
+             xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+             xmlns:prism="http://prismlibrary.com/"
+             Dialog:DialogParticipation.Register="{Binding}"
+             prism:ViewModelLocator.AutoWireViewModel="True"
+             FontSize="18">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <!-- Title, Textbox, Button -->
+            <ColumnDefinition Width="auto" />
+            <!-- Any -->
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+
+        <Grid.RowDefinitions>
+            <!-- Title -->
+            <RowDefinition Height="auto" />
+            <!-- Textbox and Button -->
+            <RowDefinition Height="auto" />
+            <!-- Datagrid -->
+            <RowDefinition Height="auto" />
+            <!-- Any -->
+            <RowDefinition Height="auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Row 0 -->
+        <TextBlock
+            Name="ViewTitleLabel"
+            Grid.Row="0"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="5,5,5,20"
+            VerticalAlignment="Center"
+            FontSize="20"
+            FontWeight="Bold"
+            Text="{Binding Title}" />
+
+        <!-- Row 1 -->
+        <StackPanel
+            Grid.Row="1"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Orientation="Horizontal">
+            <Button
+                x:Name="UploadButton"
+                Margin="0,5,5,5"
+                Content="Select File"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Left"
+                IsDefault="True"
+                Style="{DynamicResource MahApps.Styles.Button}"
+                Click="UploadButton_Click" />
+            <TextBlock
+                x:Name="LogFileName"
+                Margin="0,5,5,5"
+                Text="{Binding LogFileName, Mode=OneWayToSource, UpdateSourceTrigger=PropertyChanged}" />
+        </StackPanel>
+
+        <!-- Row 2 -->
+        <DataGrid
+            x:Name="LogViewGrid"
+            Grid.Row="2"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Margin="0,5,5,5"
+            AutoGenerateColumns="False"
+            VerticalScrollBarVisibility="Visible"
+            HorizontalScrollBarVisibility="Visible"
+            GridLinesVisibility="Vertical"
+            ItemsSource="{Binding FirewallLogEntries}">
+
+            <!-- Datagrid Style options -->
+            <DataGrid.Style>
+                <Style BasedOn="{StaticResource MahApps.Styles.DataGrid}" TargetType="{x:Type DataGrid}">
+                    <Setter Property="AlternatingRowBackground" Value="{DynamicResource MahApps.Brushes.Gray10}" />
+                </Style>
+            </DataGrid.Style>
+
+            <!-- Set Column Header Style -->
+            <DataGrid.ColumnHeaderStyle>
+                <Style BasedOn="{StaticResource MahApps.Styles.DataGridColumnHeader}" TargetType="{x:Type DataGridColumnHeader}">
+                    <Setter Property="ContentTemplate">
+                        <Setter.Value>
+                            <DataTemplate>
+                                <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding}" FontSize="14"/>
+                            </DataTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </DataGrid.ColumnHeaderStyle>
+            
+            <!-- Columns -->
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="Time" Binding="{Binding TimeStamp}" />
+                <DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+                <DataGridTextColumn Header="Action" Binding="{Binding Action}" />
+                <DataGridTextColumn Header="Rule" Binding="{Binding FWRule}" />
+                <DataGridTextColumn Header="ScrIP" Binding="{Binding SrcIP}" />
+                <DataGridTextColumn Header="DstIP" Binding="{Binding DstIP}" />
+                <DataGridTextColumn Header="ScrPort" Binding="{Binding SrcPort}" />
+                <DataGridTextColumn Header="DstPort" Binding="{Binding DstPort}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+    </Grid>
+</UserControl>
