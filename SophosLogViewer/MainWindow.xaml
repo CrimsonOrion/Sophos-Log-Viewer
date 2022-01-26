@@ -9,28 +9,11 @@
                  Title="{Binding Title}" 
                  Dialog:DialogParticipation.Register="{Binding}"
                  WindowStartupLocation="CenterScreen"
-                 SizeToContent="WidthAndHeight"
-                 MinHeight="400"
-                 MaxHeight="700"
-                 MinWidth="650"
-                 MaxWidth="1000">
+                 Width="800" Height="500">
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
-
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="auto" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
-
+        
         <!-- Row 0 -->
-
-        <!-- Row 1 -->
         <ContentControl 
-            Grid.Row="1"
-            Grid.Column="0"
             Margin="5"
             prism:RegionManager.RegionName="MainRegion" />
     </Grid>

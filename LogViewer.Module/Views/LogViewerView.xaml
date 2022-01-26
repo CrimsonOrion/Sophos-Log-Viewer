@@ -20,10 +20,12 @@
             <RowDefinition Height="auto" />
             <!-- Textbox and Button -->
             <RowDefinition Height="auto" />
+            <!-- ComboBoxes -->
+            <RowDefinition Height="auto" />
             <!-- Datagrid -->
             <RowDefinition Height="auto" />
             <!-- Any -->
-            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
         <!-- Row 0 -->
@@ -60,11 +62,44 @@
         </StackPanel>
 
         <!-- Row 2 -->
-        <DataGrid
-            x:Name="LogViewGrid"
+        <StackPanel
             Grid.Row="2"
             Grid.Column="0"
             Grid.ColumnSpan="2"
+            Orientation="Horizontal">
+            <ComboBox
+                mah:TextBoxHelper.Watermark="SrcIP"
+                ItemsSource="{Binding SrcIPList}"
+                SelectedItem="{Binding SelectedSrcIP, UpdateSourceTrigger=PropertyChanged}" />
+            <ComboBox
+                mah:TextBoxHelper.Watermark="DstIP"
+                ItemsSource="{Binding DstIPList}"
+                SelectedItem="{Binding SelectedDstIP, UpdateSourceTrigger=PropertyChanged}" />
+            <ComboBox
+                mah:TextBoxHelper.Watermark="DstPort"
+                ItemsSource="{Binding DstPortList}"
+                SelectedItem="{Binding SelectedDstPort, UpdateSourceTrigger=PropertyChanged}" />
+            <ComboBox
+                mah:TextBoxHelper.Watermark="FwRule"
+                ItemsSource="{Binding FwRuleList}"
+                SelectedItem="{Binding SelectedFwRule, UpdateSourceTrigger=PropertyChanged}" />
+            <Button
+                x:Name="ApplyFilterButton"
+                Margin="10,5,5,5"
+                Content="Apply Filter"
+                VerticalAlignment="Top"
+                HorizontalAlignment="Center"
+                Style="{DynamicResource MahApps.Styles.Button}"
+                Command="{Binding ApplyFilterCommand}" />
+        </StackPanel>
+        
+        <!-- Row 3 -->
+        <DataGrid
+            x:Name="LogViewGrid"
+            Grid.Row="3"
+            Grid.Column="0"
+            Grid.ColumnSpan="2"
+            Grid.RowSpan="2"
             Margin="0,5,5,5"
             AutoGenerateColumns="False"
             VerticalScrollBarVisibility="Visible"

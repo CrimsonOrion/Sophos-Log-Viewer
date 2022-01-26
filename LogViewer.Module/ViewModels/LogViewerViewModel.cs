@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using SophosLogViewer.Core;
 using System.Linq;
+using Prism.Commands;
 
 namespace LogViewer.Module.ViewModels;
 public class LogViewerViewModel : BindableBase, INavigationAware
@@ -20,6 +21,7 @@ public class LogViewerViewModel : BindableBase, INavigationAware
     private readonly IDialogCoordinator _dialogCoordinator;
     private readonly IFileProcessor _fileProcessor;
     private readonly IErrorHandler _errorHandler;
+    List<FirewallLogModel> _list = new();
 
     #region LogViewer View Properties
 
@@ -32,16 +34,74 @@ public class LogViewerViewModel : BindableBase, INavigationAware
         set { SetProperty(ref _logFileName, value); CheckLogFileAsync(); }
     }
 
-    private ObservableCollection<FirewallLogModel> _firewallLogEntries;
+    private ObservableCollection<FirewallLogModel> _firewallLogEntries = new();
     public ObservableCollection<FirewallLogModel> FirewallLogEntries
     {
         get { return _firewallLogEntries; }
         set { SetProperty(ref _firewallLogEntries, value); }
     }
 
+    private ObservableCollection<string> _srcIPList;
+    public ObservableCollection<string> SrcIPList
+    {
+        get { return _srcIPList; }
+        set { SetProperty(ref _srcIPList, value); }
+    }
+
+    private ObservableCollection<string> _dstIPList;
+    public ObservableCollection<string> DstIPList
+    {
+        get { return _dstIPList; }
+        set { SetProperty(ref _dstIPList, value); }
+    }
+
+    private ObservableCollection<string> _dstPortList;
+    public ObservableCollection<string> DstPortList
+    {
+        get { return _dstPortList; }
+        set { SetProperty(ref _dstPortList, value); }
+    }
+
+    private ObservableCollection<string> _fwRuleList;
+    public ObservableCollection<string> FwRuleList
+    {
+        get { return _fwRuleList; }
+        set { SetProperty(ref _fwRuleList, value); }
+    }
+
+    private string _selectedSrcIP = "";
+    public string SelectedSrcIP
+    {
+        get { return _selectedSrcIP; }
+        set { SetProperty(ref _selectedSrcIP, value); }
+    }
+
+    private string _selectetDstIP = "";
+    public string SelectedDstIP
+    {
+        get { return _selectetDstIP; }
+        set { SetProperty(ref _selectetDstIP, value); }
+    }
+
+    private string _selectedDstPort = "";
+    public string SelectedDstPort
+    {
+        get { return _selectedDstPort; }
+        set { SetProperty(ref _selectedDstPort, value); }
+    }
+
+    private string _selectedFwRule = "";
+    public string SelectedFwRule
+    {
+        get { return _selectedFwRule; }
+        set { SetProperty(ref _selectedFwRule, value); }
+    }
+
     #endregion
 
     #region Delegate Commands
+
+    public DelegateCommand ApplyFilterCommand => new(DisplayList);
 
     #endregion
 
@@ -95,18 +155,11 @@ public class LogViewerViewModel : BindableBase, INavigationAware
             // Process File
             controller.SetMessage(message);
             await Task.Run(() => Thread.Sleep(1));
-            var list = await Task.Run(() => _fileProcessor.ProcessFirewallLogData(new() { LogFileName }));
+            _list = await Task.Run(() => _fileProcessor.ProcessFirewallLogData(new() { LogFileName }));
 
-            List<FirewallLogModel> list2 = new();
-            for (int i = 0; i < 1000; i++)
-            {
-                list2.Add(list[i]);
-            }
+            ResetLists();
 
-            FirewallLogEntries = new(list2);
-
-
-            title = "Completed";
+            title = "";
             message = "";
         }
         catch (OperationCanceledException cancelEx)
@@ -122,8 +175,75 @@ public class LogViewerViewModel : BindableBase, INavigationAware
         finally
         {
             await controller.CloseAsync();
-            await _dialogCoordinator.ShowMessageAsync(this, title, message);
+            if (!string.IsNullOrEmpty(title))
+            {
+                await _dialogCoordinator.ShowMessageAsync(this, title, message);
+            }
         }
+    }
+
+    void ResetLists()
+    {
+        SrcIPList = new(_list.OrderBy(_ => _.SrcIP).GroupBy(_ => _.SrcIP).Select(_ => _.Key).Prepend(""));
+        DstIPList = new(_list.OrderBy(_ => _.DstIP).GroupBy(_ => _.DstIP).Select(_ => _.Key).Prepend(""));
+        DstPortList = new(_list.OrderBy(_ => _.DstPort).GroupBy(_ => _.DstPort).Select(_ => _.Key).Prepend(""));
+        FwRuleList = new(_list.OrderBy(_ => _.FWRule).GroupBy(_ => _.FWRule).Select(_ => _.Key).Prepend(""));
+
+        FirewallLogEntries = new();
+    }
+
+    async void DisplayList()
+    {
+        var title = "Please wait...";
+        var message = "Processing Firewall Log File...";
+        ProgressDialogController controller = await _dialogCoordinator.ShowProgressAsync(this, title, message, true);
+        controller.SetIndeterminate();
+        controller.SetMessage(message);
+        await Task.Run(() => Thread.Sleep(1));
+
+        if (string.IsNullOrEmpty(SelectedSrcIP) && string.IsNullOrEmpty(SelectedDstIP) && string.IsNullOrEmpty(SelectedDstPort) && string.IsNullOrEmpty(SelectedFwRule))
+        {
+            ResetLists();
+            await controller.CloseAsync();
+            return;
+        }
+
+        List<FirewallLogModel> filteredList = new(_list);
+        FirewallLogEntries = new();
+
+        if (!string.IsNullOrEmpty(SelectedSrcIP))
+        {
+            filteredList = filteredList.Where(_ => _.SrcIP == SelectedSrcIP).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(SelectedDstIP))
+        {
+            filteredList = filteredList.Where(_ => _.DstIP == SelectedDstIP).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(SelectedDstPort))
+        {
+            filteredList = filteredList.Where(_ => _.DstPort == SelectedDstPort).ToList();
+        }
+
+        if (!string.IsNullOrEmpty(SelectedFwRule))
+        {
+            filteredList = filteredList.Where(_ => _.FWRule == SelectedFwRule).ToList();
+        }
+
+        SrcIPList = SelectedSrcIP == String.Empty ? new(filteredList.OrderBy(_ => _.SrcIP).GroupBy(_ => _.SrcIP).Select(_ => _.Key).Prepend("")) : SrcIPList;
+        DstIPList = SelectedDstIP == String.Empty ? new(filteredList.OrderBy(_ => _.DstIP).GroupBy(_ => _.DstIP).Select(_ => _.Key).Prepend("")) : DstIPList;
+        DstPortList = SelectedDstPort == String.Empty ? new(filteredList.OrderBy(_ => _.DstPort).GroupBy(_ => _.DstPort).Select(_ => _.Key).Prepend("")) : DstPortList;
+        FwRuleList = SelectedFwRule == String.Empty ? new(filteredList.OrderBy(_ => _.FWRule).GroupBy(_ => _.FWRule).Select(_ => _.Key).Prepend("")) : FwRuleList;
+
+        var count = filteredList.Count < 2000 ? filteredList.Count : 2000;
+
+        for (int i = 0; i < count; i++)
+        {
+            FirewallLogEntries.Add(filteredList[i]);
+        }
+
+        await controller.CloseAsync();
     }
 
     #endregion
